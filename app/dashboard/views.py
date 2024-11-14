@@ -93,9 +93,6 @@ def signup(request):
 
 from .forms import StockFilterForm
 
-from ex_form.models import MyStock
-
-
 # df = pystock.get_market_ohlcv("20220720", "20220810", "005930")
  
 # 3:23 부터 보기. https://www.youtube.com/watch?v=JRGktwaaYUA
