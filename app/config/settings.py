@@ -69,7 +69,6 @@ INSTALLED_APPS = [
     # local apps
     'core',
     'dashboard',
-    'ex_form',
     
 ]
 
