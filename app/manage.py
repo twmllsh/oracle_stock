@@ -5,10 +5,8 @@ import sys
 
 from django.core.management import call_command
 from django.conf import settings
-import dotenv
 
 def main():
-    dotenv.read_dotenv()
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     try:
