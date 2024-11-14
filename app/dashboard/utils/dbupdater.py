@@ -1095,17 +1095,21 @@ class DBUpdater:
                 data_gen = csv_data_generator(backup_file_name)
                 records_to_db(data_gen)
                 print("데이터 복원완료!")
-            return
-
-        # update 하기
-        latest_dates = (
-            InvestorTrading.objects.values("ticker_id")
-            .annotate(latest_date=Max("날짜"))
-            .order_by("?")[:10]
-        )
-        latest_dates_list = list(latest_dates.values_list("latest_date", flat=True))
-        counter = Counter(latest_dates_list)
-        last_exist_date = counter.most_common()[0][0]
+                return
+        
+        if not data:
+            last_exist_date = pd.Timestamp.now() - pd.Timedelta(days=200)
+        else:
+            # update 하기
+            latest_dates = (
+                InvestorTrading.objects.values("ticker_id")
+                .annotate(latest_date=Max("날짜"))
+                .order_by("?")[:10]
+            )
+            latest_dates_list = list(latest_dates.values_list("latest_date", flat=True))
+            counter = Counter(latest_dates_list)
+            last_exist_date = counter.most_common()[0][0]
+        
         print(f"last date : {last_exist_date}")
 
         # 그날짜부터 오늘까지 date_list 생성 (비지니스데이)
@@ -1127,7 +1131,10 @@ class DBUpdater:
         n = 365 * 2
         the_date = pd.Timestamp.now().date() - pd.Timedelta(days=n)
         qs = InvestorTrading.objects.filter(날짜__lt=the_date)
-        # Ohlcv.objects.filter(date__lt=the_date).delete()
+        
+        if qs.exists():
+            print('오래된 데이터 삭제합니다.! ')
+            qs.delete()
 
         asyncio.run(mydiscord.send_message(f"update_investor finished......"))
 
