@@ -303,8 +303,7 @@ class DBUpdater:
 
         new_codes = [data["code"] for data in datas]
         existing_tickers = Ticker.objects.filter(code__in=new_codes)
-        existing_tickers_dict = {ticker.code: ticker for ticker in existing_tickers}
-        # existing_codes = set(existing_tickers.values_list('code', flat=True))
+        existing_tickers_dict = {ticker.code: ticker for ticker in existing_tickers} if Ticker.objects.exists() else {}
 
         ## 업데이트할것과 새로 생성하는것을 분리
         to_update = []
