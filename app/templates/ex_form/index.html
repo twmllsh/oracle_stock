@@ -1,0 +1,30 @@
+{% extends "ex_form/base.html" %}
+{% block right %}
+<div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+    <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off">
+    <label class="btn btn-outline-primary" for="btncheck1">Checkbox 1</label>
+  
+    <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off">s
+    <label class="btn btn-outline-primary" for="btncheck2">Checkbox 2</label>
+  
+    <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off">
+    <label class="btn btn-outline-primary" for="btncheck3">Checkbox 3</label>
+  </div>
+
+  <div class="container-fluid bg-danger my-5"> 
+    <p>안녕하셍 ㅛ div 태그입다.</p>
+   </div>
+
+<ul class="list-group">
+    <li class="list-group-item"><a href="{% url 'ex_form:exam01' %}"> exam01</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam02' %}"> exam02</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam03' %}"> exam03</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam04' %}"> exam04</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam05' %}"> exam05</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam06' %}"> exam06</a></li>
+    <li class="list-group-item"><a href="{% url 'ex_form:exam07' %}"> exam07</a></li>
+    {% comment %} <li class="list-group-item"><a href="{% url 'ex_form:exam08:1' %}"> exam08</a></li> {% endcomment %}
+    <li class="list-group-item"><a href="{% url 'ex_form:exam09' %}"> exam09</a></li>
+    {% comment %} <li class="list-group-item"><a href="{% url 'ex_form:exam10' %}"> exam10</a></li> {% endcomment %}
+</ul>
+{% endblock  %}

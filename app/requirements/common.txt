@@ -1,0 +1,7 @@
+Django==5.1.1
+django-extensions==3.2.3
+django-template-partials==24.4
+bokeh==3.6.0
+beautifulsoup4==4.12.3
+pykrx==1.0.48
+django-model-utils==5.0.0

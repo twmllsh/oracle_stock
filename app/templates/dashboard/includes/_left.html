@@ -1,0 +1,15 @@
+<div class="form-check text-start">
+  <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+          <div class="form-check mb-3">
+              {{ field }} 
+              <label class="form-check-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}  
+              </label>
+          </div>
+      {% endfor %}
+      {% comment %} {{ form.as_p }} {% endcomment %}
+      <button type="submit" class="btn btn-primary mb-3">Search</button>
+  </form>
+</div>

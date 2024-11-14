@@ -1,0 +1,7 @@
+<p>person_list.html</p>
+
+{% for object in object_list %}
+<a href={% url "ex_form:exam08" object.id %}> {{ object.name }}<a>
+<a href={% url "ex_form:exam10" object.id %}> 수정 <a>
+<br>
+{% endfor %}

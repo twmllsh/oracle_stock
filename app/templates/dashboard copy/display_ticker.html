@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+{% {% extends "dashboard/base.html" %}%}
+
+<body>
+    {% load static %}
+    <div class="container mx-auto bg-dark mt-3" style="border-radius: 15px;">
+
+        <div class="row shadow-lg p-2" style="border-radius: 15px;">
+            
+            <div class="col-3 p-3 overflow-y-scroll shadow-lg bg-dark" style="border-radius: 15px; max-height: 95vh; background:linear-gradient(132deg, rgb(16, 4, 244) 0%, rgb(36, 3, 249) 0%, rgb(244, 6, 232) 100%)">
+                <h4 class="fw-bold text-center text-white">Analyze Ticker</h4>
+                {% for tkr, name in tickers %}
+                    <a href="/dashboard/{{ tkr }}/">
+                    {% comment %} <a href="{% url 'display_ticker' tkr  %}/"> {% endcomment %}
+                        <div class="card mb-2 shadow-lg bg-dark-subtle">
+                            <div class="card-body fw-bold">{{ name }} ({{ tkr }})</div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+
+            <div class="col-9 bg-dark text-light overflow-y-scroll" style="max-height: 95vh;">
+                <h1 class="text-center">Stock Analysis Dashboard</h1>
+                
+                <div class="row p-3">
+                    <div class="col-3">
+                        <h5 class="text-warning">{{ ticker }}</h5>
+                        <p class="text-warning">{{ name }}</p>
+                    </div>
+                    <div class="col-3">
+                        {% if "-" in change %}
+                            <h5 class="text-danger">{{ close }}</h5>
+                            <p class="text-danger fw-bold">{{ change }}&nbsp;&nbsp;&nbsp;&nbsp;{{ pct_change }}</p>
+                        {% else %}
+                            <h5 class="text-success">{{ close }}</h5>
+                            <p class="text-success fw-bold">+{{ change }}&nbsp;&nbsp;&nbsp;&nbsp;{{ pct_change }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-3">
+                        <h5 class="text-warning">Industry</h5>
+                        <p class="text-warning">{{ industry }}</p>
+                    </div>
+                    <div class="col-3">
+                        <h5 class="text-warning">Sector</h5>
+                        <p class="text-warning">{{ sector }}</p>
+                    </div>
+                </div>
+
+                <p class="ps-3 pe-3">{{ summary|truncatechars:500 }}</p>
+
+                <div class="card shadow-lg mb-3" style="border-radius: 15px;">
+                    <div class="card-header fw-bold text-center">{{ticker}} OHLC Chart</div>
+                    <div class="card-body">
+                        {{ scripts | safe }}
+                        {{ hist_chart_div | safe }}
+                    </div>
+                </div>
+
+            </div>
+        </div>  
+        
+    </div>
+</body>
+</html>

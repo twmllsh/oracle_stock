@@ -1,0 +1,7 @@
+2024-09-04 12:37:04,479 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:37:04,479 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:37:04,479 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:40:17,764 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:40:17,764 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:40:17,764 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value
+2024-09-04 12:40:17,764 - gather_basic_info_async - ERROR - gather_basic_info_async error cannot access local variable 'changes' where it is not associated with a value

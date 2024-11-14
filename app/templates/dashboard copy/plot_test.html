@@ -1,0 +1,21 @@
+<!-- templates/chart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.bokeh.org/bokeh/release/bokeh-3.6.0.min.css" type="text/css" />
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-3.6.0.min.js"
+    crossorigin="anonymous"></script>
+
+    <title>Bokeh Chart</title>
+    {% for script, _ in charts %}
+        {{ script | safe }}  <!-- Bokeh script 삽입 -->
+    {% endfor %}
+</head>
+<body>
+    <h2>My Bokeh Chart code:{{ code }}</h2>
+    {% for _, div in charts %}
+        {{ div | safe }}  <!-- Bokeh div 삽입 -->
+    {% endfor %}
+</body>
+</html>

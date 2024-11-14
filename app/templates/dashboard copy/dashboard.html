@@ -1,0 +1,52 @@
+{% extends 'dashboard/base.html' %}
+
+{% comment %} {% block title %}Dashboard{% endblock %} {% endcomment %}
+
+{% block left_content %}
+    <div class="row">
+        <div class="container">
+            <ul>
+                {% if categories %}
+                    {% for category in categories %}
+                    <div class="col-md-4">
+                        <li>{{category}}</li>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block right_content %}
+<div class="row">
+    <div class="container">
+        <h2>Details for Item 1</h2>
+        <p>Information about the selected item will be displayed here.</p>
+        <div id="chart">
+            <!-- 차트를 그릴 부분 -->
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar', // 차트 타입
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [12, 19, 3, 5, 2, 3, 9],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+{% endblock %}

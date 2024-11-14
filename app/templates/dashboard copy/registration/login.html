@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+
+{% block login %}
+    <h2>Login</h2>
+    <div class="mb-3">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <a href="{% url 'dashboard:signup' %}">Signup</a>
+{% endblock %}

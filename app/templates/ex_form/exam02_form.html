@@ -1,0 +1,21 @@
+<form method='post'>
+    {% csrf_token %}
+    
+    {{ form }}
+    <input type='submit' value='전송'><br>
+</form>
+<hr>
+<form method='post'>
+    {% csrf_token %}
+    <table>
+        {{ form }}
+    </table>
+    <input type='submit' value='전송'><br>
+</form>
+<form method='post'>
+    {% csrf_token %}
+    <table>
+        {{ form.as_ul }}
+    </table>
+    <input type='submit' value='전송'><br>
+</form>

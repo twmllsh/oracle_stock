@@ -1,0 +1,36 @@
+{% extends "ex_form/base.html" %}
+{% block left_top %}
+    <div class="form-check text-start">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-check mb-3">
+                    {{ field }} 
+                    <label class="form-check-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}  
+                    </label>
+                </div>
+            {% endfor %}
+            {% comment %} {{ form.as_p }} {% endcomment %}
+            <button type="submit" class="btn btn-primary mb-3">Search</button>
+        </form>
+    </div>
+{% endblock left_top %}    
+
+{% block left_bottom %}
+    
+        {% if mystocks %}
+            <ul class="list-unstyled fw-normal pb-2 small my-2">
+                {% for stock in mystocks %}
+                    {% comment %} <li class="list-group-item" >
+                        <a href="">{{stock.name }}({{stock.code}})</a>
+                    </li> {% endcomment %}
+                    <p><a class="link-light text-decoration-none " href="#">{{stock.name}}</a></p>
+                {% empty %}
+                    <li class="list-group-item">No products found.</li>
+                {% endfor %}
+            
+            </ul>
+        {% endif %}
+        <li class="list-group-item">No Data found.</li>
+{% endblock left_bottom %}    

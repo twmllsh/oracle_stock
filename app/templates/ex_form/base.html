@@ -1,0 +1,30 @@
+{% extends "ex_form/root.html" %}
+
+{% comment %} <div class="container"> {% endcomment %}
+{% block content%}
+
+    <div class="row justify-content-md-center" id=''>
+        {% block header %}
+            {% include "ex_form/_headers.html" %}
+        {% endblock header %}
+    </div>
+
+    <div class="row justify-content-md-center">
+        <div class="col-sm-4 ">
+            <div class="row">
+                {% block left_top %}left_top{% endblock left_top %}
+            </div>
+            <div class="row">
+                {% block left_bottom %}left_bottom{% endblock left_bottom %}
+            </div>
+                        
+        </div>
+        <div class="col-md-auto">
+            {% block right %}right{% endblock right %}
+        </div>
+    </div>
+    <div class="row justify-content-md-center">
+        {% block footer %}footer{% endblock footer %}
+    </div>
+{% endblock %}
+{% comment %} </div> {% endcomment %}
