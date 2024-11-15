@@ -6,8 +6,6 @@ services:
       context: ./postgre  # PostgreSQL 이미지
     restart: always
     # container_name: db
-    env_file:
-      - .env
     environment:
       - POSTGRES_DB=${POSTGRES_DB}         #  데이터베이스 이름
       - POSTGRES_USER=${POSTGRES_USER}      # 데이터베이스 사용자
@@ -15,7 +13,9 @@ services:
     ports:
       - "5432:5432"  # 외부에서 접근 가능하도록 포트 설정
     volumes:
-      - ./data/db:/var/lib/postgresql/data  - 데이터 영속성을 위해 볼륨 사용
+      - ./postgres_data:/var/lib/postgresql/data   
+    env_file:
+      - .env
 
   web:
     build:
@@ -26,19 +26,19 @@ services:
       - ./app:/app   
     ports:
       - "8000:8000"  
-    env_file:
-      - .env
     environment:
       - POSTGRES_URL=${POSTGRES_URL}  
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_DB=${POSTGRES_DB}   
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    env_file:
+      - .env
     depends_on:
       - db
     command: ["./entrypoint.sh"]
       # command: python manage.py runserver 0.0.0.0:8000 
     # command: bash -c "python & tail -f /dev/null"
-networks:
-  mynetwork:
 
+volumes:
+  postgres_data:
