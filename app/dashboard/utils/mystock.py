@@ -148,7 +148,7 @@ class Stock:
                 print('5분봉데이터 생성 실패~')
                 anal=False
                     
-    
+        self.reasons, self.reasons_30 = self.get_reasons()
         
         # investor
         self.investor_part = self.get_investor_part()
@@ -487,7 +487,108 @@ class Stock:
             return temp_dic
 
     ################  기술적 분석  ######################3
-    
+    def get_reasons(self):
+        reasons = ""
+        if hasattr(self, "chart_d"):
+            if self.chart_d.is_w20_3w():
+                reasons += "is_w20_3w "
+            if self.chart_d.is_w3_ac():
+                reasons += "is_w3_ac "
+            try:
+                if self.chart_d.is_sun_ac(n봉전이내=4):
+                    reasons += "is_sun_ac "
+            except:
+                pass
+            try:
+                if self.chart_d.is_coke_ac(n봉전이내=4):
+                    reasons += "is_coke_ac "
+            except:
+                pass
+            try:
+                if self.chart_d.is_multi_through(n봉전이내=4):
+                    reasons += "is_multi_through "
+            except:
+                pass
+            try:
+                if self.chart_d.is_abc():
+                    reasons += "is_abc "
+            except:
+                pass
+            try:
+                if self.chart_d.is_coke_gcv(bb_width=60):
+                    reasons += "is_coke_gcv60 "
+            except:
+                pass
+            try:
+                if self.chart_d.is_coke_gcv(bb_width=240):
+                    reasons += "is_coke_gcv240 "
+            except:
+                pass
+            try:
+                if self.is_sun_gcv():
+                    reasons += "is_sun_gcv "
+            except:
+                pass
+            try:
+                if self.chart_d.is_rsi():
+                    reasons += "is_rsi "
+            except:
+                pass
+            try:
+                if self.chart_d.is_new_phase():
+                    reasons += "is_new_phase "
+            except:
+                pass
+        
+        reasons_30 = ""
+        if hasattr(self, "chart_30"):
+            try:
+                if self.chart_30.is_w20_3w():
+                    reasons += "is_w20_3w "
+            except:
+                pass
+            try:
+                if self.chart_30.is_sun_ac(n봉전이내=10):
+                    reasons += "is_sun_ac "
+            except:
+                pass
+            try:
+                if self.chart_30.is_coke_ac(n봉전이내=10):
+                    reasons += "is_coke_ac "
+            except:
+                pass
+            try:
+                if self.chart_30.is_multi_through(n봉전이내=10):
+                    reasons += "is_multi_through "
+            except:
+                pass
+            try:
+                if self.chart_30.is_abc():
+                    reasons += "is_abc "
+            except:
+                pass
+            try:
+                if self.chart_30.is_coke_gcv(ma=10, bb_width=30):
+                    reasons += "is_coke_gcv "
+            except:
+                pass
+            try:
+                if self.chart_30.is_sun_gcv(ma=10):
+                    reasons += "is_sun_gcv "
+            except:
+                pass
+            try:
+                if self.chart_30.is_sun_gcv(short_ma=10):
+                    reasons += "is_rsi "
+            except:
+                pass
+            try:
+                if self.chart_30.is_new_phase(short_ma=10):
+                    reasons += "is_new_phase "
+            except:
+                pass
+        return reasons, reasons_30
+        
         
     def is_good_consen(self, pct=0.3):
         ''' 현재 년도대비 다음년도 성장율 (연결연도 영업이익 기준 ) pct '''

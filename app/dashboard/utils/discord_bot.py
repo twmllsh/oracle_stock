@@ -5,7 +5,7 @@ from django.conf import settings
 
 class MyDiscordBot(commands.Bot):
 
-    def __init__(self):
+    def __init__(self, TOKEN=None):
         self.command_prefix = '!'
         # Intents 설정
         intents = discord.Intents.default()
@@ -13,8 +13,12 @@ class MyDiscordBot(commands.Bot):
         
         # commands.Bot 초기화
         super().__init__(command_prefix=self.command_prefix, intents=intents)
-        self.TOKEN = settings.MYENV("DISCORD_BOT_TOKEN")
-
+        
+        if TOKEN:
+            self.TOKEN = TOKEN
+        else:
+            self.TOKEN = settings.MYENV("DISCORD_BOT_TOKEN")
+            
         
         self.add_command(self.hello_command)
 

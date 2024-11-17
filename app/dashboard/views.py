@@ -14,7 +14,13 @@ from pykrx import stock as pystock
 
 from .utils.dbupdater import DBUpdater
 from apscheduler.schedulers.background import BackgroundScheduler
-sched : BackgroundScheduler = BackgroundScheduler()
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+
+executors = {
+    'default': ThreadPoolExecutor(5),  # 최대 10개의 스레드
+    'processpool': ProcessPoolExecutor(4)  # 최대 5개의 프로세스
+}
+sched : BackgroundScheduler = BackgroundScheduler(executors=executors)
 
 
 # pd.options.plotting.backend = "bokeh" ## 버전문제인듯. 작동안함. 
@@ -31,32 +37,35 @@ sched : BackgroundScheduler = BackgroundScheduler()
 # second(int/str) -> 실행할 초 0-59
 # timezone(timezoneInfo|str) -> 사용할 timezone
 
+# mon, tue, wed, thu, fri, sat, sun
+# 쉼표로 구분하여 여러 요일 지정: "mon,wed,fri"
+# 예: day_of_week='mon-fri' → 월요일부터 금요일(평일)에만 실행
 
 # @sched.scheduled_job('cron',  hour=22, minute=8)
 # def scheduler_ticker():
 #     DBUpdater.update_ticker()
 
-@sched.scheduled_job('cron', day_of_week="1-5", hour=7, minute=30)
+@sched.scheduled_job('cron', day_of_week="mon-fri", hour=7, minute=30)
 def scheduler_ticker():
     DBUpdater.update_ticker()
     
-@sched.scheduled_job('cron', day_of_week="1-6", hour=15, minute=55) # 토요일 전체 데이터 새로 받기.
+@sched.scheduled_job('cron', day_of_week="mon-sat", hour=15, minute=55) # 토요일 전체 데이터 새로 받기.
 def scheduler_ohlcv():
     DBUpdater.update_ohlcv()
     
-@sched.scheduled_job('cron', day_of_week="1-5", hour=16, minute=5)
+@sched.scheduled_job('cron', day_of_week="mon-fri", hour=16, minute=5)
 def dcheduler_basic_info():
     DBUpdater.update_basic_info()
 
-@sched.scheduled_job('cron', day_of_week="1-5", hour=18, minute=5)
+@sched.scheduled_job('cron', day_of_week="mon-fri", hour=18, minute=5)
 def dcheduler_update_investor():
     DBUpdater.update_investor()
 
-@sched.scheduled_job('cron',  day_of_week="1-6", hour="8-18", minute="*/45")
+@sched.scheduled_job('cron',  day_of_week="mon-sat", hour="8-18", minute="*/45")
 def dcheduler_update_issue():
     DBUpdater.update_issue()
 
-@sched.scheduled_job('cron', day_of_week="1-6", hour="8-23", minute="*/30")
+@sched.scheduled_job('cron', day_of_week="mon-sat", hour="8-23", minute="*/30")
 def dcheduler_update_stockplus_news():
     DBUpdater.update_stockplus_news()
     

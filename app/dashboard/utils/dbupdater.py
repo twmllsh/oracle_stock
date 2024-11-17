@@ -437,8 +437,10 @@ class DBUpdater:
             ticker_list = []
             for code, ticker_obj in exist_ticker_dict.items():
                 if ticker_obj:
-                    print(ticker_obj.name, "...")
                     data = fdr.DataReader(code, start=start_date)
+                    seconds = 1
+                    print(f'{seconds}초간 정지.{ticker_obj.name}:{len(data)}개 데이터 받음. ')
+                    time.sleep(seconds)
                     if len(data):
                         for date, row in data.iterrows():
                             ohlcv = Ohlcv(
@@ -468,7 +470,8 @@ class DBUpdater:
 
         # 금요일이면 _all_data_from_fdr 실행하기.
         today = pd.Timestamp.now()
-        if today.weekday() == 6:  # 토요일이면
+        print('오늘: ',today.weekday())
+        if today.weekday() == 5:  # 토요일이면
             # if today.weekday() ==4: # 0 :월
             print("전체 데이터 fdr 작업중.....")
             _all_data_from_fdr()
@@ -1095,9 +1098,11 @@ class DBUpdater:
                 records_to_db(data_gen)
                 print("데이터 복원완료!")
                 return
-        
+            else:
+                print('백업 데이터를 찾지 못함.')
         if not data:
-            last_exist_date = pd.Timestamp.now() - pd.Timedelta(days=200)
+            last_exist_date = pd.Timestamp.now() - pd.Timedelta(days=300)
+            print(f'{last_exist_date} 부터 데이터 전체 다운로드')
         else:
             # update 하기
             latest_dates = (
@@ -1116,15 +1121,23 @@ class DBUpdater:
         dates = dates[1:]  # 마지막일 제외. 어차피 확정인 자료임. 업데이트는 의미없다.
 
         if len(dates):
+            def split_list(lst, n):
+                """리스트를 n개씩 나누는 함수"""
+                return [lst[i:i + n] for i in range(0, len(lst), n)]
             # 데이터 받기
-            str_dates = [date.strftime("%Y%m%d") for date in dates]
-            result = asyncio.run(GetData._get_investor_all_async(str_dates))
-            dates_downloaded = result["날짜"].unique()
+            split_str_dates = [date.strftime("%Y%m%d") for date in dates]
+            print("split_str_dates: ", split_str_dates)
+            for str_dates in split_list(split_str_dates, 20): # 20 개씩 나눠서 작업. 
+                print(str_dates , '작업중..')
+                result = asyncio.run(GetData._get_investor_all_async(str_dates))
+                dates_downloaded = result["날짜"].unique()
 
-            records = result.to_dict("records")
-            print(f"dates downloaded {dates_downloaded}")
-            # 저장하기.
-            records_to_db(records=records)
+                records = result.to_dict("records")
+                print(f"dates downloaded {dates_downloaded}")
+                # 저장하기.
+                records_to_db(records=records)
+                print('5초후 다음작업..')
+                time.sleep(5)
 
         # ## 최종적으로 특정날짜 이전 데이터 제거하기.
         n = 365 * 2
@@ -1463,18 +1476,24 @@ class DBUpdater:
         update_fields = [field for field in update_fields if field !='id']
         
         codes = DBUpdater.update_ticker()
-        
+        print(f"{len(codes)} 개 작업중! ")
         for item in codes:
         
             ## 임시로 없는 데이터들만 작업.
-            print(item['name'], end=',')
-            if item['code'] in exist_qs_dict:
+            # print(item['name'], end=',')
+            # if item['code'] in exist_qs_dict:
+            #     continue
+            try:
+                stock = Stock(item['code'], anal=True)
+            except Exception as e:
+                print(e, item['name'])
                 continue
-
-            stock = Stock(item['code'], anal=True)
             info_dic = {}
             info_dic['ticker'] = stock.ticker
             info_dic['cur_price'] = stock.chart_d.df.Close.iloc[-1]
+            info_dic['reasons'] = stock.reasons
+            info_dic['reasons_30'] = stock.reasons_30
+                
             if isinstance(stock.fin_df, pd.DataFrame):
                 df_y = stock.fin_df.set_index('year')
                 info_dic["growth_y1"] = df_y.loc[int(check_y1), 'growth'] if int(check_y1) in df_y.index else None 
@@ -1503,91 +1522,9 @@ class DBUpdater:
                     info_dic[f"{chart_name}_ab_v"] = chart.is_ab_volume()
                     info_dic[f"{chart_name}_good_array"] = chart.is_good_array()
             
-                info_dic['reasons'] = ""
-                info_dic['reasons_30'] = ""
-                
-                if chart_name=='chart_d':
-                    info_dic['reasons'] += 'is_w20_3w ' if chart.is_w20_3w() else ''
-                    info_dic['reasons'] += 'is_w3_ac ' if chart.is_w3_ac() else ''
-                    try:
-                        if chart.is_sun_ac(n봉전이내=4):
-                            info_dic['reasons'] += 'is_sun_ac '
-                    except:
-                        pass
-                    try:
-                        if chart.is_coke_ac(n봉전이내=4):
-                            info_dic['reasons'] += 'is_coke_ac '
-                    except:
-                        pass
-                    try:
-                        if chart.is_multi_through(n봉전이내=4):
-                            info_dic['reasons'] += 'is_multi_through ' 
-                    except:
-                        pass
-                    try:
-                        if chart.is_abc():
-                            info_dic['reasons'] += 'is_abc ' 
-                    except:
-                        pass
-                    try:
-                        if chart.is_coke_gcv(bb_width=60):
-                            info_dic['reasons'] += 'is_coke_gcv ' 
-                    except:
-                        pass
-                    try:
-                        if chart.is_sun_gcv():
-                            info_dic['reasons'] += 'is_sun_gcv ' 
-                    except:
-                        pass
-                    try:
-                        if chart.is_rsi():
-                            info_dic['reasons'] += 'is_rsi ' 
-                    except:
-                        pass
-                    try:
-                        if chart.is_new_phase():
-                            info_dic['reasons'] += 'is_new_phase ' 
-                    except:
-                        pass
 
-                if chart_name=='chart_30':
-                    try:
-                        info_dic['reasons_30'] += 'is_w20_3w ' if chart.is_w20_3w() else ''
-                    except:
-                        pass
-                    
-                    try:
-                        info_dic['reasons_30'] += 'is_sun_ac ' if chart.is_sun_ac(n봉전이내=10) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_coke_ac ' if chart.is_coke_ac(n봉전이내=10) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_multi_through ' if chart.is_multi_through(n봉전이내=10) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_abc ' if chart.is_abc() else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_coke_gcv ' if chart.is_coke_gcv(ma=10, bb_width=30) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_sun_gcv ' if chart.is_sun_gcv(ma=10) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_rsi ' if chart.is_rsi(short_ma=10) else ''
-                    except:
-                        pass
-                    try:
-                        info_dic['reasons_30'] += 'is_new_phase ' if chart.is_new_phase(short_ma=10) else ''
-                    except:
-                        pass
+                
+                
 
             if item['code'] in exist_qs_dict:
                 chartvalue = exist_qs_dict.get(item['code'])
@@ -1612,10 +1549,11 @@ class DBUpdater:
 
             
         
-    def choice_stock():
+    def choice_stock(codes : list=None):
         
         # option 장중: 장후:
         # 0~6프로 종목 선정
+        ## stocks = fdr.StockListing('KRX') # 실시간데이터면 사용하기. 
         codes_6 = []
         for _ in range(5):
             try:
@@ -1665,6 +1603,17 @@ class DBUpdater:
         
         pass
     
+
+
+    def delete_data(model : models.Model, date_col_name:str, n:int=500):
+        the_date = pd.Timestamp.now() - pd.Timedelta(days=n)
+        the_date = the_date.date()
+        qs = model.objects.filter(f"{date_col_name}__lt={the_date}")
+        if qs:
+            print('오래된데이터 있음.')
+        
+            
+
 
 class GetData:
 
