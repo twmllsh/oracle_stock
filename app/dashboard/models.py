@@ -50,6 +50,10 @@ class Info(models.Model):
     
     tracker = FieldTracker(fields=['ROE', 'EPS', '액면가', '상장주식수', '외국인소진율', 'PER_12M', '유동주식수'])
 
+    @classmethod
+    def get_info_good_cash(cls, 유보율=200):
+        pass
+    
     def __str__(self):
         return f"Info[{self.ticker.name} 업종 : {self.업종} 구분 : {self.구분} 외국인소진율: {self.외국인소진율}]"
 
@@ -179,26 +183,51 @@ class Finstats(models.Model):
             영업이익__gte=F('prev_year_profit') * (1 + pct)
         ).select_related('ticker')
 
-        # 결과 출력
-        for item in data:
-            try:
-                growth_rate = ((item.영업이익 / item.prev_year_profit) - 1) * 100
+        
+        data = { item.ticker.code : f"{item.ticker.name} {item.영업이익}({((item.영업이익 / item.prev_year_profit) - 1) * 100 :,.0f}%)"                        for item in data}
+        # # 결과 출력
+        # for item in data:
+        #     try:
+        #         growth_rate = ((item.영업이익 / item.prev_year_profit) - 1) * 100
             
-                print(f"""
-                기업: {item.ticker.name}
-                2024년 영업이익: {item.영업이익:,.0f}
-                2023년 영업이익: {item.prev_year_profit:,.0f}
-                증가율: {growth_rate:.1f}%
-                """)
-            except:
-                print(f"""
-                기업: {item.ticker.name}
-                2024년 영업이익: {item.영업이익:,.0f}
-                2023년 영업이익: {item.prev_year_profit:,.0f}
-                """)
+        #         print(f"""
+        #         기업: {item.ticker.name}
+        #         2024년 영업이익: {item.영업이익:,.0f}
+        #         2023년 영업이익: {item.prev_year_profit:,.0f}
+        #         증가율: {growth_rate:.1f}%
+        #         """)
+        #     except:
+        #         print(f"""
+        #         기업: {item.ticker.name}
+        #         2024년 영업이익: {item.영업이익:,.0f}
+        #         2023년 영업이익: {item.prev_year_profit:,.0f}
+        #         """)
         return data
     
+    @classmethod
+    def get_good_cash(cls, 유보율=1000):
+        datas = cls.objects.filter(
+             fintype__in=['연결연도', '연결분기'],
+             유보율__isnull=False
+         ).filter(
+             id=Subquery(
+                 cls.objects.filter(
+                     ticker=OuterRef('ticker'),
+                     fintype__in=['연결연도', '연결분기'],
+                     유보율__isnull=False
+                 ).order_by('-year', '-quarter').values('id')[:1]
+             )
+         ).select_related('ticker').values('ticker', 'ticker__name', '유보율').order_by('-유보율')
+         
+        datas = datas.filter(유보율__gte=유보율)
         
+        result = {
+             item['ticker'] : f"{item['ticker__name']}({item['유보율']}%)" 
+                   for item in datas
+                   }
+        
+        return result
+
     def __str__(self):
         return f"Fin [{self.ticker.name}, year {self.year}({self.quarter}), 영업이익{self.영업이익}]"
     
@@ -252,39 +281,35 @@ class InvestorTrading(models.Model):
     
     # 최근 10(n)일 동향 가져오기
     @classmethod
-    def trader_trade(cls, n=10):
-        
-        the_day = list(InvestorTrading.objects.values_list('날짜',flat=True)
+    def trader_trade(cls, n=10, investors=None):
+        '''
+        investors  = " " 로 분리된 스트링.
+        '''
+        the_day = list(cls.objects.values_list('날짜',flat=True)
                        .distinct().order_by('-날짜')[:n])[-1] 
-        n_list = [10, 5, 3, 1]
-        the_days = [list(InvestorTrading.objects.values_list('날짜',flat=True)
-                       .distinct().order_by('-날짜')[:n])[-1] 
-                    for n in n_list
-        ]
+       
+        if investors is None:
+            investors = ['외국인']
+        else:
+            investors = investors.split()
         
         tickers = []
-        
-        for the_day in the_days:
-            qs = InvestorTrading.objects.filter(날짜__gte=the_day)
-            qs1 = qs.filter(투자자='투신')
-            qs2 = qs1.filter(매도거래대금__gt=0)
-            qs3 = qs2.annotate(
+        qs = cls.objects.filter(날짜__gte=the_day)
+        for investor in investors:
+            qs1 = qs.filter(투자자=investor)
+            qs1 = qs1.filter(매도거래대금__gt=0)
+            qs1 = qs1.values("날짜").annotate(
                 total_sell = Sum('매도거래대금'),
                 total_buy = Sum('매수거래대금'),).annotate(
                 ratio = F('total_buy') / F('total_sell')).filter(
-                ratio__gt=2).order_by('-ratio')[:20]
-            tickers = [investor.ticker for investor in qs3]
+                Q(ratio__gt=2) & Q(total_buy__gt=10 * 100000000)).order_by('-ratio')[:20]
+            tickers = [item.ticker for item in qs1]
             tickers += tickers
         result = list(set(tickers))
+        result = {ticker.code : ticker for ticker in result}
         return result
         
-    ## idea 각 기관마다. 외인, 연기금,  사모, 투신 ,
-    ## 10일간 각일, 각5일, 10일 전체 매수 top 10위 종목을 모아서 --> 종목 선정.
-    ## 선정된 종목들 10일간 매수동향!!  > BrokerTrading 도 마찬가지. !!
-    
-     
-    
-    
+
     def __str__(self):
         return f"Investor[{self.ticker} - {self.날짜} - {self.투자자} - {self.순매수거래량}]"
         
@@ -307,8 +332,32 @@ class BrokerTrading(models.Model):
 
     def __str__(self):
         return f"Broker [{self.ticker.name} - {self.date} - {self.broker_name} +{self.buy} -{self.sell}]"        
+    
+    @classmethod
+    def good_broker(cls , brokers=None , n=10):
         
-
+        the_day = list(cls.objects.values_list('date',flat=True)
+                       .distinct().order_by('-date')[:n])[-1] 
+        if brokers is None:
+            brokers = ['외국계추정합']
+        
+        qs = BrokerTrading.objects.filter(date__gte=the_day).prefetch_related('ticker')
+        qs = qs.values('ticker_id', 'ticker__name').annotate(
+            total_buy=Sum('buy'), total_sell=Sum('sell')
+            ).annotate(diff=F("total_buy") - F("total_sell")).order_by(F('diff').desc(nulls_last=True))
+        
+        # 상위20개
+        result = {item['ticker_id'] : f"{item['ticker__name']}({item['total_buy']}/{item['total_buy']})" for item in qs[:20] }
+        return result
+        
+        
+            
+            
+                
+        # tickers = [item.ticker for item in qs1]
+        # tickers += tickers
+        # result = list(set(tickers))
+        # result = {ticker.code : ticker for ticker in result}
 
 
 class ChangeLog(models.Model):
@@ -423,10 +472,12 @@ class News(models.Model):
 
 class ChartValue(models.Model):
     ticker = models.OneToOneField(Ticker, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True, null=True)
     cur_price = models.FloatField(null=True, blank=True)
     growth_y1 = models.FloatField(null=True, blank=True)
     growth_y2 = models.FloatField(null=True, blank=True)
     growth_q = models.FloatField(null=True, blank=True)
+    good_buy = models.IntegerField(null=True, blank=True)
     chart_d_bb60_upper20 = models.FloatField(null=True, blank=True)
     chart_d_bb60_upper10 = models.FloatField(null=True, blank=True)
     chart_d_bb60_upper = models.FloatField(null=True, blank=True)
@@ -469,6 +520,30 @@ class ChartValue(models.Model):
     chart_5_ab_v = models.BooleanField(null=True)
     chart_5_good_array = models.BooleanField(null=True)
         
+    @classmethod
+    def get_data_contain_words(cls, word_list = None, option='day'):
+        '''
+        구분으로 나눠야함. 
+        1. 5분봉 coke 상태의 upper 값 돌파.상태.  --> 3w (실적, 수급, 정배, or 30up, or sun_ac, coke_ac, sun_gcv, coke_gcv)
+        2. 30분봉 coke 상태의 upper 값 돌파.상태.  --> 3w (실적, 수급, 정배, or 30up, or sun_ac, coke_ac, sun_gcv, coke_gcv)
+        3. 거래량 적고 단봉 -->  (실적, 수급, 정배, or 30up, or sun_ac, coke_ac, sun_gcv, coke_gcv)
+        '''
+        if word_list is None:
+            return pd.DataFrame(cls.objects.values())
+        
+        
+        search_field = 'reasons' if option=='day' else 'reasons_30'
+        
+        # Q 객체를 사용하여 모든 단어가 포함된 데이터 필터링
+        query = Q()
+        for keyword in word_list:
+            query &= Q(**{f"{search_field}__icontains": keyword})
+
+        # 데이터 가져오기
+        qs = cls.objects.filter(query)
+        result_df = pd.DataFrame(qs.values())
+        return result_df
+    
     
     def __str__(self):
         return f"{self.ticker.name} {self.reasons[:10]}"

@@ -552,7 +552,7 @@ class DBUpdater:
                 tasks = [asyncio.create_task(async_fdr_datareader(semaphore, code, start_date)) for code in codes]
                 results = await asyncio.gather(*tasks)
                 df = pd.concat(results)
-                df.reset_index(inplace=True)
+                df.reset_index(inplace=True, names='Date')
                 return df
             concat_df = asyncio.run(async_fdr_datareader_all(semaphore, codes, str_dates[0]))  ## 장중에만 업데이트 해야함. 
             
@@ -566,9 +566,13 @@ class DBUpdater:
 
         ## 새로받은데이터의 code 와 Date 정보 가져오기
         ticker_codes = concat_df["code"].unique()
-        dates = concat_df["Date"].unique()
-    
         
+        if len(concat_df):
+            dates = concat_df["Date"].unique()
+        else:
+            print('concat_df', concat_df)
+            return pd.DataFrame() 
+    
         
         ###########################################################################
         
@@ -1493,7 +1497,7 @@ class DBUpdater:
             info_dic['cur_price'] = stock.chart_d.df.Close.iloc[-1]
             info_dic['reasons'] = stock.reasons
             info_dic['reasons_30'] = stock.reasons_30
-                
+            info_dic['good_buy'] = stock.is_good_buy()
             if isinstance(stock.fin_df, pd.DataFrame):
                 df_y = stock.fin_df.set_index('year')
                 info_dic["growth_y1"] = df_y.loc[int(check_y1), 'growth'] if int(check_y1) in df_y.index else None 

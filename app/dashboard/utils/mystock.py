@@ -101,6 +101,7 @@ class Stock:
             self.상장주식수 * self.유동비율 / 100 if self.유동비율 else self.상장주식수
         ) if self.유동비율 else self.상장주식수
         self.외국인소진율 = self.info.외국인소진율
+        self.유보율 = self.get_유보율()
         from dashboard.models import Ohlcv
         self.ohlcv_day = Ohlcv.get_data(self.ticker)
         self.chart_d: chart.Chart = chart.Chart(
@@ -155,8 +156,38 @@ class Stock:
 
         # fin status
         self.fin_df, self.fin_df_q = self.get_fin_status()
+    
+    def get_유보율(self):
+        qs = self.ticker.finstats_set.filter(fintype__in=['연결연도', '연결분기'])
+        qs1 = qs.filter(유보율__isnull=False)
+        qs2 = qs1.order_by('-year','-quarter').values('유보율','year','quarter')
+        value = qs2[:1]
+        result = value[0]['유보율'] if value else None
+        return result
+    
+    def get_broker(self, n=10):
+        the_day = 10
+        the_day = list(self.ticker.brokertrading_set.values_list('date', flat=True).order_by('date').distinct())[-20:][0]
+        data = self.ticker.brokertrading_set.filter(date__gte=the_day)
+        df = pd.DataFrame(data.values('date','broker_name','buy','sell'))
+        df_melted = df.melt(id_vars=['date','broker_name'], value_vars=['buy','sell'], var_name='type', value_name='amount' )
+        aggregated_df = df_melted.groupby(['date', 'broker_name', 'type']).sum().reset_index()
         
-       
+
+        # # # 그래프 그리기
+        # import plotly.express as px
+        # fig = px.line(
+        #     aggregated_df,
+        #     x='date',
+        #     y='amount',
+        #     color='broker_name',
+        #     line_dash='type',
+        #     title='Broker Buy/Sell 추이',
+        #     labels={'amount': '금액', 'date': '날짜', 'broker_name': '고객사', 'type': '종류'}
+        #     )
+
+        return df_melted
+    
     def get_fin_status(self):
         
         def _get_성장율(data, gap=1):
@@ -619,10 +650,25 @@ class Stock:
         
         
     def is_good_buy(self):
-        ''' 매집비를 어떻게 분석해야하나....?  '''
+        ''' 매집비를 어떻게 분석해야하나....?  
+        매집비 105 넘어가는거 숫자. 풀매수기관 있는거 숫자 합한 값 반환. 기술적분석과 함께 조건걸어야한다. 
+        '''
         # self.investor_part 로 분석. 
-        # if self.investor_part is not None and isinstance(self.investor_part, pd.DataFrame) and not self.investor_part.empty:
-        pass
+        result = 0
+        if hasattr(self, 'investor_part'):
+            lastest_groups = sorted(self.investor_part['group'].unique())[-2:]
+            for group in lastest_groups:
+                data = self.investor_part.loc[self.investor_part['group']==group]
+          
+                cond = (data['매집비'] >= 105) & (data['주도기관'].str.contains("외국인|연기금|투신")) & (data['순매수금_억'] >= 10)
+                result += len(data.loc[cond])
+                
+                # cond = (data['풀매수기관']!="") & (data['매집비'] >= 103)  & (data['순매수금_억'] >= 10)
+                # result += len(data.loc[cond]) 
+                # 두개로 하면 겹치는 상황에 두가지 값이 모두 더해진다. 
+        
+        return result
+    
         
     
     def is_3w(self):

@@ -17,7 +17,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
 executors = {
-    'default': ThreadPoolExecutor(5),  # 최대 10개의 스레드
+    'default': ThreadPoolExecutor(10),  # 최대 10개의 스레드
     'processpool': ProcessPoolExecutor(4)  # 최대 5개의 프로세스
 }
 sched : BackgroundScheduler = BackgroundScheduler(executors=executors)
@@ -47,7 +47,9 @@ sched : BackgroundScheduler = BackgroundScheduler(executors=executors)
 
 @sched.scheduled_job('cron', day_of_week="mon-fri", hour=7, minute=30)
 def scheduler_ticker():
+    
     DBUpdater.update_ticker()
+    
     
 @sched.scheduled_job('cron', day_of_week="mon-sat", hour=15, minute=55) # 토요일 전체 데이터 새로 받기.
 def scheduler_ohlcv():
@@ -56,6 +58,7 @@ def scheduler_ohlcv():
 @sched.scheduled_job('cron', day_of_week="mon-fri", hour=16, minute=5)
 def dcheduler_basic_info():
     DBUpdater.update_basic_info()
+    DBUpdater.anal_all_stock()
 
 @sched.scheduled_job('cron', day_of_week="mon-fri", hour=18, minute=5)
 def dcheduler_update_investor():

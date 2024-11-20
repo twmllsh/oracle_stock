@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     # local apps
     'core',
     'dashboard',
+    'usa',
     
 ]
 
