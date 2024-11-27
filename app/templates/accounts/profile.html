@@ -13,7 +13,7 @@
         <p>가입일: {{ user.date_joined|date:"Y-m-d" }}</p>
     </div>
     <div class="card-footer text-center">
-        <a href="{% url 'logout' %}" class="btn btn-danger">로그아웃</a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-danger">로그아웃</a>
     </div>
 </div>
 {% endblock %}

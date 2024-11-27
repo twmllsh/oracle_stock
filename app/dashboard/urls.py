@@ -21,13 +21,11 @@ app_name = "dashboard"
 
 # /kor/ 
 urlpatterns = [
-    # path("", xframe_options_exempt(views.ItemListView.as_view), name='item_list'),
     path("", views.ItemListView.as_view(), name='index'),
-    # path("", views.StockFilterListView.as_view(), name='index'),
-    # path("sean/", views.list_form, name='list_form'),
     # path("api/<str:item_code>/", views.stock_api, name='stock_api'),
     path('api/', include(router.urls)),  # API URL에 포함  restframework
     # path("chart/<str:item_code>/", views.item_detail, name='chart'),
     path("chart/<str:item_code>/", views.stock_detail_view, name='chart'),
+    path("sample/<str:item_code>/", views.sample_view, name='sample'),
     
 ] 

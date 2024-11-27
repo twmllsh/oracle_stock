@@ -79,7 +79,7 @@ INSTALLED_APPS = [
 
 # 로그인 후 리다이렉트할 URL 설정
 LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'accounts/login'
 
 
 if DEBUG:

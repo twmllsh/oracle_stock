@@ -30,7 +30,8 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')  # 로그아웃 후 로그인 페이지로 리다이렉트
+    return redirect('/accounts/login')  # 로그아웃 후 로그인 페이지로 리다이렉트
 
 def profile_view(request):
-    return render(request, 'accounts/profile.html')
+    return render(request, 'dashboard/index.html')
+    # return redirect('dashboard:index')

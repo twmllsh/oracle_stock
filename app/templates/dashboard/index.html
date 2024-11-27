@@ -1,27 +1,28 @@
-{% extends "dashboard/base.html"%}
+{% extends "base.html"%}
 
-{% block nav %}
-    {% include "dashboard/_nav.html" %}
-{% endblock nav %}
+{% block content %}
 
-{% block left %}
-    {% include "dashboard/item_list.html" %}
-{% endblock left %}
-
-{% block right %}
-
-<div class="container mt-5">
-    <h1>Chart</h1>
-    <div class="card">
-        <div class="card-body">
-            <!-- Plotly 그래프 임베드 -->
-            <div id='chart-part'>
-                {{ graph_html|safe }}  <!-- safe 필터를 사용하여 HTML을 안전하게 출력 -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            {% include "dashboard/item_list.html" %}
+        </div>
+        <div class="col-md-6">
+            <div class="container mt-5">
+                <h1>Chart</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Plotly 그래프 임베드 -->
+                        <div id='chart-part'>
+                            {{ graph_html|safe }}  <!-- safe 필터를 사용하여 HTML을 안전하게 출력 -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-{% endblock right %}
+{% endblock content %}
 
 

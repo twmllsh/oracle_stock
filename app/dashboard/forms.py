@@ -7,59 +7,19 @@ import numpy as np
 
 class StockFilterForm(forms.Form):
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
         
-        chartvalue = apps.get_model('dashboard','ChartValue')
-        # growth_values
-        growth_values = chartvalue.objects.exclude(
-            Q(growth_y1__isnull=True) | Q(growth_y1__lte=0)
-        ).aggregate(
-            min_value=Min('growth_y1'),
-            max_value=Max('growth_y1'),
-            avg_value=Avg('growth_y1'),
-        )
-
-        self.fields['consen_slider'] = forms.IntegerField(
-            label='consen_slider', 
-            initial=growth_values.get('avg_value', 20),  # 기본값 설정
-            min_value=growth_values.get('min_value', 20), 
-            max_value=growth_values.get('max_value', 1000),  # 기본값 설정
-        )
-
-        # sun_width_values
-        sun_width_values = chartvalue.objects.exclude(
-            Q(chart_d_sun_width__isnull=True)
-        ).aggregate(
-            min_value=Min('chart_d_sun_width'),
-            max_value=Max('chart_d_sun_width'),
-            avg_value=Avg('chart_d_sun_width'),
-        )
-
-        self.fields['sun_slider'] = forms.IntegerField(
-            label='sun_slider',
-            initial=30,
-            min_value=sun_width_values.get('min_value', 0),
-            max_value=sun_width_values.get('max_value', 500),
-        )
-
-        # coke_width_values
-        coke_width_values = chartvalue.objects.exclude(
-            Q(chart_d_bb240_width__isnull=True)
-        ).aggregate(
-            min_value=Min('chart_d_bb240_width'),
-            max_value=Max('chart_d_bb240_width'),
-            avg_value=Avg('chart_d_bb240_width'),
-        )
-
-        self.fields['coke_slider'] = forms.IntegerField(
-            label='coke_slider',
-            initial=60,
-            min_value=coke_width_values.get('min_value', 5),
-            max_value=coke_width_values.get('max_value', 400),
-        )
+    #     chartvalue = apps.get_model('dashboard','ChartValue')
+    #     # growth_values
     
     consen = forms.BooleanField(label='consen', required=False)
+    consen_slider = forms.IntegerField(label='consen_slider',
+                                    initial=30,
+                                    min_value=0,
+                                    max_value=500,
+                                    )
+    
     
     turnarround = forms.BooleanField(label='turnarround', required=False)
     new_bra = forms.BooleanField(label='new_bra', required=False)
@@ -75,5 +35,63 @@ class StockFilterForm(forms.Form):
     
     coke = forms.BooleanField(label='coke', required=False)
     coke_gcv = forms.BooleanField(label='coke_gcv', required=False)
-
+    coke_slider = forms.IntegerField(label='coke_slider',
+                                    initial=30,
+                                    min_value=0,
+                                    max_value=500,
+                                    )
+    
+    
     realtime = forms.BooleanField(label='realtime', required=False)
+    
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+        # min과 max 값 설정
+        sun_width_dict = self.calculate_sun_min_max_value()
+        self.fields['sun_slider'].widget.attrs['min'] = sun_width_dict['min_value']
+        self.fields['sun_slider'].widget.attrs['max'] = sun_width_dict['max_value']
+
+        # min과 max 값 설정
+        coke_width_dict = self.calculate_coke_min_max_value()
+        self.fields['coke_slider'].widget.attrs['min'] = coke_width_dict['min_value']
+        self.fields['coke_slider'].widget.attrs['max'] = coke_width_dict['max_value']
+        
+        consen_dict = self.calculate_consen_min_max_value()
+        self.fields['consen_slider'].widget.attrs['min'] = consen_dict['min_value']
+        self.fields['consen_slider'].widget.attrs['max'] = consen_dict['max_value']
+
+    ## 함수에 nan값이 있다. 수치값만 나오게 필터를 잘하던 데이터베이스 값넣을대 ..변경해야함.
+    def calculate_sun_min_max_value(self):
+        sun_width_values = ChartValue.objects.exclude(
+                Q(chart_d_sun_width__isnull=True)
+            ).aggregate(
+                min_value=Min('chart_d_sun_width'),
+                max_value=Max('chart_d_sun_width'),
+            )
+        return sun_width_values
+    
+    
+    def calculate_consen_min_max_value(self):
+        growth_values = ChartValue.objects.filter(
+            Q(growth_y1__isnull=False) | Q(growth_y1__gte=0)
+        ).aggregate(
+            min_value=Min('growth_y1'),
+            max_value=Max('growth_y1'),
+        )
+        return growth_values
+    
+    def calculate_coke_min_max_value(self):
+        coke_width_values = ChartValue.objects.exclude(
+            Q(chart_d_bb240_width__isnull=True)
+        ).aggregate(
+            min_value=Min('chart_d_bb240_width'),
+            max_value=Max('chart_d_bb240_width'),
+            # avg_value=Avg('chart_d_bb240_width'),
+        )
+        return coke_width_values
+  
+
+        
