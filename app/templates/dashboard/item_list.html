@@ -1,0 +1,90 @@
+<!-- item_list.html -->
+{% load django_bootstrap5 %}
+ {% comment %} <form method="get"> <!-- GET으로 설정 -->
+    {% csrf_token %}
+    <label>
+        <input type="checkbox" name="new_bra" {% if request.GET.new_bra %}checked{% endif %}>
+        new_bra
+    </label><br>
+    <label>
+        <input type="checkbox" name="w3" {% if request.GET.w3 %}checked{% endif %}>
+        w3
+    </label><br>
+    <label>
+        <input type="checkbox" name="consen" {% if request.GET.consen %}checked{% endif %}>
+        consen
+    </label><br>
+    <label>
+        <input type="checkbox" name="sun" {% if request.GET.sun %}checked{% endif %}>
+        sun
+    </label><br>
+    <div class="form-group">
+        <label for="{{ form.slider.id_for_label }}">{{ form.slider.label }}</label>
+        <input type="range" class="form-control-range" id="{{ form.slider.id_for_label }}" name="{{ form.slider.name }}"
+               value="{{ form.slider.value|default:50 }}" min="{{ form.slider.field.widget.attrs.min }}" max="{{ form.slider.field.widget.attrs.max }}">
+        <span>현재 값: <span id="sliderValue">{{ form.slider.value|default:50 }}</span></span>
+    </div>
+
+    <button class="btn btn-info btn-lg" style="font-size: 20px;" type="submit">필터 적용  ({{chartvalues|length}}) </button> 
+
+</form>  {% endcomment %}
+
+<form method="get">
+    {% csrf_token %}
+    {{ form.as_table }}  <!-- 폼 필드를 테이블 형식으로 렌더링 -->
+    <button class="btn btn-info btn-lg" type="submit">적용</button>
+</form>
+
+<h5> ({{chartvalues|length}})</h5>
+{% comment %} /kor/chart/005930/ {% endcomment %}
+
+<div class="row">
+    <div class="list-group">
+        {% for chartvalue in chartvalues %}
+        
+        <div class="card">
+                <a href="#" hx-get="{% url 'dashboard:chart' item_code=chartvalue.ticker.code %}" hx-target="chart-part" hx-swap="innerHTML">   
+                    <div class="card-body">
+                        <h5 class="card-title">{{chartvalue.ticker.name}}({{chartvalue.ticker.code}})</h5>
+                        <p class="card-text">성장율: {{chartvalue.growth_y1}}%</p>
+                    </div>
+                </div>
+        </a>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-warning">조건에 맞는 항목이 없습니다.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% comment %} 
+ <!-- 페이지네이션 -->
+ <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; 처음</a>
+            <a href="?page={{ page_obj.previous_page_number }}">이전</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">다음</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">마지막 &raquo;</a>
+        {% endif %}
+    </span>
+</div> {% endcomment %}
+<script>
+    // 슬라이더와 현재 값을 업데이트하는 스크립트
+    const slider = document.getElementById('{{ form.slider.id_for_label }}');
+    const sliderValue = document.getElementById('sliderValue');
+
+    slider.oninput = function() {
+        sliderValue.innerHTML = this.value;  // 슬라이더의 현재 값을 업데이트
+    }
+    function updateSliderValue(value) {
+        document.getElementById('sliderValue').innerHTML = value;  // 슬라이더의 현재 값을 업데이트
+    }
+</script>

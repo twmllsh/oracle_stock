@@ -491,6 +491,8 @@ class ChartValue(models.Model):
     chart_d_ab = models.BooleanField(null=True)
     chart_d_ab_v = models.BooleanField(null=True)
     chart_d_good_array = models.BooleanField(null=True)
+    pre_vol = models.FloatField(null=True, blank=True)
+    vol20 = models.FloatField(null=True, blank=True)
     reasons = models.TextField(blank=True)
     reasons_30 = models.TextField(blank=True)
     chart_30_bb60_upper20 = models.FloatField(null=True, blank=True)
@@ -519,7 +521,30 @@ class ChartValue(models.Model):
     chart_5_ab = models.BooleanField(null=True)
     chart_5_ab_v = models.BooleanField(null=True)
     chart_5_good_array = models.BooleanField(null=True)
+    유보율 = models.FloatField(null=True, blank=True)
+    부채비율 = models.FloatField(null=True, blank=True)
+    액면가 = models.FloatField(null=True, blank=True)
+    EPS = models.FloatField(null=True, blank=True)
+    상장주식수 = models.FloatField(null=True, blank=True)
+    유동주식수 = models.FloatField(null=True, blank=True)
+    매물대1 = models.FloatField(null=True, blank=True)
+    매물대2 = models.FloatField(null=True, blank=True)
+    
+    @classmethod
+    def get_data_with_ticker(cls):
+        chartvalues = ChartValue.objects.select_related('ticker').all()
+        chart_fields = [field.name for field in ChartValue._meta.get_fields()]
+        data = []
+        for value in chartvalues:
+            record = {field :getattr(value, field) for field in chart_fields}
+            record['code'] = value.ticker.code
+            record['name'] = value.ticker.name
+            data.append(record)
         
+        df = pd.DataFrame(data)
+        return df
+    
+    
     @classmethod
     def get_data_contain_words(cls, word_list = None, option='day'):
         '''
@@ -541,9 +566,54 @@ class ChartValue(models.Model):
 
         # 데이터 가져오기
         qs = cls.objects.filter(query)
-        result_df = pd.DataFrame(qs.values())
+        chart_fields = [field.name for field in cls._meta.get_fields()]
+        
+        qs = qs.select_related('ticker')
+        data = []
+        for value in qs:
+            record = {field :getattr(value, field) for field in chart_fields}
+            record['code'] = value.ticker.code
+            record['name'] = value.ticker.name
+            data.append(record)
+        result_df = pd.DataFrame(data)
         return result_df
     
     
     def __str__(self):
         return f"{self.ticker.name} {self.reasons[:10]}"
+    
+
+class Recommend(models.Model):
+    code  = models.CharField(max_length=10)
+    name = models.CharField(max_length=30)
+    recommend_at = models.DateTimeField(auto_now_add=True, null=True)
+    change = models.FloatField(null=True, blank=True)
+    valid = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.name} {self.recommend_at} {self.valid}"
+    
+    @classmethod
+    def refresh_data(cls):
+        from django.utils import timezone
+        delete_days = 60 # 60일지나면 데이터 삭제.
+        min_gap = 5 # 5분지나면 valid =False 처리.
+        to_update = []
+        update_fields = ['valid']
+        the_time = pd.Timestamp.now(tz='Asia/Seoul') -  pd.Timedelta(minutes=min_gap)
+        the_time = the_time.to_pydatetime()
+        qs = cls.objects.filter(valid=True)
+        for item in qs:
+            if the_time  > timezone.localtime(item.recommend_at):
+                item.valid=False
+                to_update.append(item)
+        
+        if to_update:
+            print(f'{len(to_update)} 개 데이터 valid속성변경')
+            cls.objects.bulk_update(to_update, fields=update_fields)
+        
+        the_date = pd.Timestamp.now(tz='Asia/Seoul') -  pd.Timedelta(days=delete_days)
+        delete_qs = cls.objects.filter(recommend_at__lte=the_date)
+        if delete_qs:
+            print(f'제거할 데이터가 {len(delete_qs)}개 있습니다.')
+            # delete_qs.delete()

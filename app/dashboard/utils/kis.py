@@ -35,7 +35,7 @@ class Kis:
             self.mode = 1
         
         self.ACCESS_TOKEN = self._access_token() ## access_token 받기.
-
+        
         
         ## 현재 내 조건식리스트 
         

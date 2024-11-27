@@ -1609,7 +1609,7 @@ class PriceLevel:
         for i in range(len(the_values)):
             setattr(self, names[i], the_values[i])
 
-    def _get_price_level(self, df, parts=10, period=240):
+    def _get_price_level(self, df, parts=10, period=120):
         """
         df : ohlcv , parts : 구분
         return : list 240거래일기준 가장많은 매물대 1, 2위 가격.

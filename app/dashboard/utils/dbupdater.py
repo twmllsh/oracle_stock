@@ -293,9 +293,11 @@ class DBUpdater:
         print("====================================")
         print("update_ticker running.......")
         print("====================================")
-
-        asyncio.run(mydiscord.send_message(f"update_ticker start! "))
-
+        try:
+            asyncio.run(mydiscord.send_message(f"update_ticker start! "))
+        except:
+            pass
+        
         datas = asyncio.run(GetData.get_code_info_df_async())
         print("데이터 다운로드 완료!")
         print("db update 중.")
@@ -336,8 +338,10 @@ class DBUpdater:
                 print(to_create)
 
         print(f"updated : {len(to_update)} created : {len(to_create)}")
-
-        asyncio.run(mydiscord.send_message(f"update_ticker finished!!"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_ticker finished!!"))
+        except:
+            pass
         return datas
 
     def ohlcv_from_backupfile_to_db(backup_file_name, backup_codes: List[str] = None):
@@ -415,7 +419,10 @@ class DBUpdater:
         print("====================================")
         print("update_ohlcv running.......")
         print("====================================")
-        asyncio.run(mydiscord.send_message(f"update_ohlcv running.."))
+        try:
+            asyncio.run((f"update_ohlcv running.."))
+        except:
+            pass
 
         def _all_data_from_fdr():
             ## 만약 금요일이면,  전체데이터 새로 fdr로 받기.
@@ -652,8 +659,10 @@ class DBUpdater:
                 print(f"{len(to_create)} 개 데이터 create")
 
         print("bulk_job complete!")
-        asyncio.run(mydiscord.send_message(f"update_ohlcv finished!!"))
-
+        try:
+            asyncio.run(mydiscord.send_message(f"update_ohlcv finished!!"))
+        except:
+            pass
         ## QuerySet Hint
 
         #### 코드 날짜로 데이터 가져오기
@@ -1087,9 +1096,10 @@ class DBUpdater:
                     new_tickers = []
                 InvestorTrading.objects.bulk_create(to_create_investor)
                 to_create_investor = []
-
-        asyncio.run(mydiscord.send_message(f"update_investor start!......"))
-
+        try:
+            asyncio.run(mydiscord.send_message(f"update_investor start!......"))
+        except:
+            pass
         data = InvestorTrading.objects.last()
         if not data:
             print(
@@ -1151,9 +1161,10 @@ class DBUpdater:
         if qs.exists():
             print('오래된 데이터 삭제합니다.! ')
             qs.delete()
-
-        asyncio.run(mydiscord.send_message(f"update_investor finished......"))
-
+        try:
+            asyncio.run(mydiscord.send_message(f"update_investor finished......"))
+        except:
+            pass
         #### 코드 날짜로 데이터 가져오기
         # col = ['date','open','high','low','close','volume']
         # data = Ohlcv.objects.select_related('ticker').filter(
@@ -1171,7 +1182,10 @@ class DBUpdater:
         date_cnt=1 그날 데이터만 취급
         가져온 데이터의 맨 위. 가장 최근일.
         """
-        asyncio.run(mydiscord.send_message(f"update_issue start......"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_issue start......"))
+        except:
+            pass
         print("====================================")
         print("update_issue running.......")
         print("====================================")
@@ -1243,14 +1257,21 @@ class DBUpdater:
                     #         iss.tickers.add(tickers)  ## 새로운이슈니까 그냥 add 나 셋하면 됨.
             except Exception as e:
                 print(e, dic)
-        asyncio.run(mydiscord.send_message(f"update_issue finished......"))
+        try:            
+            asyncio.run(mydiscord.send_message(f"update_issue finished......"))
+        except:
+            pass
+        
         return latest_dict_list
 
     def update_theme_upjong():
         """
         데이터 가져와서 저장하기.
         """
-        asyncio.run(mydiscord.send_message(f"update_upjong start......"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_upjong start......"))
+        except:
+            pass
         print("====================================")
         print("update_theme_upjong running.......")
         print("====================================")
@@ -1394,14 +1415,21 @@ class DBUpdater:
                 print(f"{remove_obj_set} 추가")
                 print("=========================================")
                 upjong.tickers.set(upjong_code_obj_set)
-        asyncio.run(mydiscord.send_message(f"update_issue finished......"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_issue finished......"))
+        except:
+            pass
 
     def update_stockplus_news():
 
         print("====================================")
         print("update_stockplus running.......")
         print("====================================")
-        asyncio.run(mydiscord.send_message(f"update_stockplus_news start......"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_stockplus_news start......"))
+        except:
+            pass
+            
         datas = asyncio.run(GetData._get_news_from_stockplus_today())
 
         ## test
@@ -1443,12 +1471,43 @@ class DBUpdater:
                     print(e, data["relatedStocks"])
 
         print(f"{len(datas)} 개 중 {len(to_create)} 개 데이터 저장!")
-        asyncio.run(mydiscord.send_message(f"update_stockplus_news finished......"))
+        try:
+            asyncio.run(mydiscord.send_message(f"update_stockplus_news finished......"))
+        except:
+            pass
+            
         ## to_create 자료가지고 데이터 만들어 메세지 보내기
 
     
+    def temp_update_anal_stock():
+        to_update = []
+        all_ls =[]
+        update_fields = ["유보율","부채비율","액면가","EPS","상장주식수","유동주식수","매물대1","매물대2"]
+        chartvalues = ChartValue.objects.all()
+        for i, chart in enumerate(chartvalues):
+            info_dic = {}
+            ticker = chart.ticker
+            stock = Stock(ticker.code)
+            chart.유보율 = stock.유보율
+            chart.부채비율 = stock.부채비율
+            chart.액면가 = stock.액면가
+            chart.EPS = stock.info.EPS
+            chart.상장주식수 = stock.상장주식수
+            chart.유동주식수 = stock.유동주식수
+            chart.매물대1 = stock.chart_d.pricelevel.first
+            chart.매물대2 = stock.chart_d.pricelevel.second
+            to_update.append(chart)
+            all_ls.append(info_dic)
+            if len(all_ls) >= 100:
+                ChartValue.objects.bulk_update(to_update, update_fields)
+                print(f"updated 완료 {len(to_update)} ")
+                to_update = []
+        if len(all_ls) > 0:
+            ChartValue.objects.bulk_update(to_update, update_fields)
+            print(f"last updated 완료 {len(to_update)} ")
+    
+    
     def anal_all_stock(anal=True):
-        
         
         
         def _create_and_update(to_create, to_update, update_fields):
@@ -1488,13 +1547,32 @@ class DBUpdater:
             # if item['code'] in exist_qs_dict:
             #     continue
             try:
-                stock = Stock(item['code'], anal=True)
+                stock = Stock(item['code'], anal=anal)
+                print(f"{stock.ticker.name} 작업중..")
             except Exception as e:
                 print(e, item['name'])
                 continue
             info_dic = {}
             info_dic['ticker'] = stock.ticker
             info_dic['cur_price'] = stock.chart_d.df.Close.iloc[-1]
+            
+            info_dic['유보율'] = stock.유보율
+            info_dic['부채비율'] = stock.부채비율
+            info_dic['액면가'] = stock.액면가
+            info_dic['EPS'] = stock.info.EPS
+            info_dic['상장주식수'] = stock.상장주식수
+            info_dic['유동주식수'] = stock.유동주식수
+            info_dic['매물대1'] = stock.chart_d.pricelevel.first
+            info_dic['매물대2'] = stock.chart_d.pricelevel.second
+            try:
+                info_dic['pre_vol'] = stock.chart_d.volume.data.iloc[-1]
+            except:
+                info_dic['pre_vol'] = None
+            try:
+                info_dic['vol20'] = stock.chart_d.volume.ma_vol.iloc[-1]
+            except:
+                info_dic['vol20'] = None
+            
             info_dic['reasons'] = stock.reasons
             info_dic['reasons_30'] = stock.reasons_30
             info_dic['good_buy'] = stock.is_good_buy()
@@ -1549,15 +1627,81 @@ class DBUpdater:
             _create_and_update(to_create, to_update, update_fields)
                 
 
-  
-
+    def choice_stock(min=4, max=8):
+        
+        # 현재 data
+        df_real= GetData.get_realtime_data(min=min, max=max) ## 네이버장중 상승종목. 
+        # 상태정보의 data
+        df_stats = ChartValue.get_data_with_ticker()
+        
+        df = pd.merge(df_real, df_stats, left_on='종목명', right_on='name', how='inner')
+        
+        # 조건 . 5분이나 30분 upper 넘어선거. 
+        ['종목명', '등락률', '현재가' ,'거래량', '매수총잔량', '매도총잔량', 'id', 'ticker', 'date',
+       'cur_price', 
+       'growth_y1', 'growth_y2', 'growth_q', 'good_buy',
+       'chart_d_bb60_upper20', 'chart_d_bb60_upper10', 'chart_d_bb60_upper',
+       'chart_d_bb60_width', 'chart_d_bb240_upper20', 'chart_d_bb240_upper10',
+       'chart_d_bb240_upper', 'chart_d_bb240_width', 
+       'chart_d_sun_width',
+       'chart_d_new_phase', 'chart_d_ab', 'chart_d_ab_v', 'chart_d_good_array',
+       
+       'pre_vol', 'vol20', 
+       'reasons', 'reasons_30', 
+       
+       'chart_30_bb60_upper20', 'chart_30_bb60_upper10', 'chart_30_bb60_upper', 'chart_30_bb60_width',
+       'chart_30_bb240_upper20', 'chart_30_bb240_upper10',
+       'chart_30_bb240_upper', 'chart_30_bb240_width', 'chart_30_sun_width',
+       'chart_30_new_phase', 'chart_30_ab', 'chart_30_ab_v',
+       'chart_30_good_array',
+       
+       'chart_5_bb60_upper20', 'chart_5_bb60_upper10',
+       'chart_5_bb60_upper', 'chart_5_bb60_width', 'chart_5_bb240_upper20',
+       'chart_5_bb240_upper10', 'chart_5_bb240_upper', 'chart_5_bb240_width',
+       'chart_5_sun_width', 'chart_5_new_phase', 'chart_5_ab', 'chart_5_ab_v',
+       'chart_5_good_array', 
+       
+       '유보율', '부채비율', '액면가', 'EPS', '상장주식수', '유동주식수',
+       '매물대1', '매물대2', 'code', 'name']
+        
+        
+        ## 정배열이고. bb 상단 뚫은거. 시가와도 비교해야 정확하나 현재 시가정보가 없음. 아래처럼 데이터 다시 받아서 확인하는 방버도 있음. 
+        cond_row = df['chart_d_good_array']
+        cond1 = (df['chart_d_bb240_upper'] < df['현재가']) & (df['chart_d_bb240_upper20'] > -0.1 )
+        cond2 = (df['chart_30_bb240_upper'] < df['현재가']) & (df['chart_30_bb240_upper20'] > -0.1 )
+        cond3 = (df['chart_5_bb240_upper'] < df['현재가']) & (df['chart_5_bb240_upper20'] > -0.1 )
+        cond_up = cond_row & cond1 & (cond2 | cond3)
+        
+        result_df = df.loc[cond_up]
+        
+        codes = list(result_df['code'])
+        
+        ## 정리되면 code 리스트만 넘기기.
+        
+        # Recommend valid= True 인종목이 있으면 result_df 에서 제거 한후 Recommend 모델저장( 코드, 이름, change 만.등록.)
+        Recommend.refresh_data()
+        recommend_qs = Recommend.objects.filter(valid=True)
+        remain_codes = recommend_qs.values_list('code',flat=True)
+        if len(remain_codes):
+            result_df = result_df.loc[~result_df['code'].isin(remain_codes)]
+        
+        # result_df db 저장.
+        db_df = result_df[['종목명','code','등락률']].copy()
+        db_df = db_df.rename(columns={'종목명':'name','code':'code','등락률':'change'})
+        for item in db_df.to_dict('records'):
+            recommend= Recommend(**item)
+            recommend.save()
             
         
-    def choice_stock(codes : list=None):
         
-        # option 장중: 장후:
+        # 등록하면서 메세지 보내도 됨.
+        
+        return db_df
+    
+    
         # 0~6프로 종목 선정
         ## stocks = fdr.StockListing('KRX') # 실시간데이터면 사용하기. 
+        ## get_realtime_data 로 네이버에서 그냥 가지고 오기. (종목명 정보만 있음 티커정보 없음.)
         codes_6 = []
         for _ in range(5):
             try:
@@ -2551,5 +2695,52 @@ class GetData:
         return df
 
 
+    def get_realtime_data(min:float=None, max:float=None):
+        '''
+        naver 실시간 시세가져오기.
+        '''
+        import requests
+        headers = {
+            "user_agent": ua.random,
+        }
+        url1 = 'https://finance.naver.com/sise/sise_rise.naver'
+        url2 = 'https://finance.naver.com/sise/sise_rise.naver?sosok=1'
+        resp1 = requests.get(url1, headers=headers)
+        resp2 = requests.get(url2, headers=headers)
+        if resp1.status_code ==200:
+            df1 = pd.read_html(StringIO(resp1.text))[-1]
+        else:
+            df1 = pd.DataFrame()
+        if resp2.status_code ==200:
+            df2 = pd.read_html(StringIO(resp2.text))[-1]
+        else:
+            df2 = pd.DataFrame()
+        
+        need_fields = '종목명|등락률|현재가|거래량|매수총잔량|매도총잔량'
+        
+        df1 = df1.filter(regex=need_fields)
+        df1 = df1.dropna()
+        df1['등락률'] = df1['등락률'].str.replace(r'[+%]', '', regex=True)
+        df1['등락률'] = df1['등락률'].astype(float)
+        df2 = df2.filter(regex=need_fields)
+        df2 = df2.dropna()
+        df2['등락률'] = df2['등락률'].str.replace(r'[+%]', '', regex=True)
+        df2['등락률'] = df2['등락률'].astype(float)
+        df = pd.concat([df1, df2])
+        df = df.sort_values('등락률', ascending=False)
+        
+        if min is not None:
+            df = df.loc[df['등락률'] >= min]
+        if max is not None:
+            df = df.loc[df['등락률'] <= max]
+        
+        ## 거래량 기준. 
+        # chartvalues 에 20평균거래량 전일거래량 추가하기. 
+        
+        ## 매도/매수 기준. 
+        
+        
+        return df
+        
 if __name__ == "__main__":
     DBUpdater.update_ticker()

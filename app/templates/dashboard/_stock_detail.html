@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+
+<div class="card">
+    <div class="card-header">
+        <h5>{{ chartvalue.ticker.name }} 상세 정보</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>종목 정보</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <th>유보율</th>
+                        <td>{{ chartvalue.유보율|floatformat:2 }}%</td>
+                    </tr>
+                    <tr>
+                        <th>상장 주식 수</th>
+                        <td>{{ chartvalue.상장주식수 }}</td>
+                        {% comment %} <td>{{ chartvalue.상장주식수|intcomma }}</td> {% endcomment %}
+                    </tr>
+                    <tr>
+                        <th>1년 성장률</th>
+                        <td>{{ chart_value.growth_y1|floatformat:2 }}%</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h6>주가 추이</h6>
+                {{ plot_div|safe }}
+            </div>
+        </div>
+    </div>
+</div>

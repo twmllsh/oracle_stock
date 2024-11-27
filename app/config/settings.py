@@ -37,9 +37,9 @@ SECRET_KEY = MYENV.str(
 )
 # SECURITY WARNING: don't run with debug turned on in production!
 
-# DEBUG = True
+
 DEBUG = MYENV.bool("DEBUG", default=True) ## DEBUG 값이 있으면 가져오고 아니면 True값
-# DEBUG = MYENV.bool("DEBUG", default=False) ## DEBUG 값이 있으면 가져오고 아니면 True값
+# DEBUG = False
 if DEBUG:
     print("###########################################")
     print("DEBUG 모드 작동!! ")
@@ -66,7 +66,11 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     "django_extensions",
     "template_partials",
+    'rest_framework',
+    'corsheaders',
     # local apps
+    'accounts.apps.AccountsConfig',
+    # 'accounts',
     'core',
     'dashboard',
     'usa',
@@ -74,9 +78,9 @@ INSTALLED_APPS = [
 ]
 
 # 로그인 후 리다이렉트할 URL 설정
-# LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
+
 
 if DEBUG:
     INSTALLED_APPS += [
@@ -95,6 +99,7 @@ MIDDLEWARE = [
 
 if DEBUG:
     MIDDLEWARE = [
+        'corsheaders.middleware.CorsMiddleware',  # CORS 미들웨어 추가
         "debug_toolbar.middleware.DebugToolbarMiddleware"
     ] + MIDDLEWARE
 
@@ -217,7 +222,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # 정적 파일이 수집될 디렉토리
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -250,3 +255,11 @@ SHELL_PLUS_IMPORTS = [
 ]
 
 SCHEDULER_DEFAULT = True   ## https://velog.io/@jwun95/Django-Scheduler%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%B4%EB%B3%B4%EC%9E%90
+
+#
+CORS_ALLOW_ALL_ORIGINS = True  # 모든 오리진 허용
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',  # 허용할 출처 추가
+    'https://115.86.36.21',
+    'http://115.86.36.21',
+]

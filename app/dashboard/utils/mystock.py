@@ -13,7 +13,9 @@ from bokeh.layouts import gridplot, column, row
 from bokeh.models import FactorRange, LabelSet
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+from django.apps import apps
 
+        
 class GetData:
 
     def _get_ohlcv_from_daum(code, data_type="30분봉", limit=450):
@@ -84,16 +86,19 @@ class ElseInfo:
     ohlcv_end_date = pd.Timestamp.now().date()
     ohlcv_start_date = ohlcv_end_date - pd.Timedelta(days=365 * 2)
 
-
+# MyModel = apps.get_model('myapp', 'MyModel')
 class Stock:
 
     def __init__(self, code, start_date=None, end_date=None, anal=False):
+        # from dashboard.models import Ohlcv, Finstats
+        # from dashboard.models import Ticker, Info
+        Ticker = apps.get_model("dashboard","Ticker")
+        # Info = apps.get_model("dashboard","Info")
         self.c_year, self.f_year = ElseInfo.check_y_current ## 현재year 미래yaer 
         self.quarters = ElseInfo.check_q_current
         self.code = code
-        from dashboard.models import Ticker, Info, Finstats
         self.ticker = Ticker.objects.get(code=self.code)
-        self.info: Info = self.ticker.info
+        self.info = self.ticker.info
         self.액면가 = self.info.액면가
         self.상장주식수 = self.info.상장주식수 if self.info.상장주식수 else self.info.보통발행주식수
         self.유동비율 = self.info.유동비율
@@ -102,10 +107,17 @@ class Stock:
         ) if self.유동비율 else self.상장주식수
         self.외국인소진율 = self.info.외국인소진율
         self.유보율 = self.get_유보율()
-        from dashboard.models import Ohlcv
-        self.ohlcv_day = Ohlcv.get_data(self.ticker)
+        self.부채비율 = self.get_부채비율()
+        
+        # ohlcv_day1 = Ohlcv.get_data(self.ticker)
+        ohlcv_values = self.ticker.ohlcv_set.all().order_by('Date')[:400].values("Date","Open","High","Low","Close","Volume")
+        ohlcv_df = pd.DataFrame(ohlcv_values)
+        ohlcv_df['Date'] = pd.to_datetime(ohlcv_df['Date'])
+        ohlcv_day = ohlcv_df.set_index('Date')
+        
+        
         self.chart_d: chart.Chart = chart.Chart(
-            self.ohlcv_day,
+            ohlcv_day,
             mas=[3, 5, 10, 20, 60, 120, 240],
             상장주식수=self.상장주식수,
             유동주식수=self.유동주식수,
@@ -114,10 +126,10 @@ class Stock:
             # 5 30 받아서 chart 생성 . 후 필요한 값만 가져오기.
             for _ in range(5):
                 try:
-                    self.ohlcv_30 = GetData._get_ohlcv_from_daum(
+                    ohlcv_30 = GetData._get_ohlcv_from_daum(
                         code=self.code, data_type="30분봉"
                     )
-                    self.ohlcv_5 = GetData._get_ohlcv_from_daum(
+                    ohlcv_5 = GetData._get_ohlcv_from_daum(
                         code=self.code, data_type="5분봉"
                     )
                     break
@@ -126,17 +138,17 @@ class Stock:
                     import time
                     time.sleep(5)
 
-            if isinstance(self.ohlcv_30, pd.DataFrame):
+            if isinstance(ohlcv_30, pd.DataFrame):
                 self.chart_30 = chart.Chart(
-                    self.ohlcv_30,
+                    ohlcv_30,
                     mas=[10, 20, 60, 120, 240],
                     상장주식수=self.상장주식수,
                     유동주식수=self.유동주식수,
                 )
 
-            if isinstance(self.ohlcv_5, pd.DataFrame):
+            if isinstance(ohlcv_5, pd.DataFrame):
                 self.chart_5 = chart.Chart(
-                    self.ohlcv_5,
+                    ohlcv_5,
                     mas=[10, 20, 60, 120, 240],
                     상장주식수=self.상장주식수,
                     유동주식수=self.유동주식수,
@@ -157,12 +169,23 @@ class Stock:
         # fin status
         self.fin_df, self.fin_df_q = self.get_fin_status()
     
+
+    
+    
     def get_유보율(self):
         qs = self.ticker.finstats_set.filter(fintype__in=['연결연도', '연결분기'])
         qs1 = qs.filter(유보율__isnull=False)
         qs2 = qs1.order_by('-year','-quarter').values('유보율','year','quarter')
         value = qs2[:1]
         result = value[0]['유보율'] if value else None
+        return result
+    
+    def get_부채비율(self):
+        qs = self.ticker.finstats_set.filter(fintype__in=['연결연도', '연결분기'])
+        qs1 = qs.filter(부채비율__isnull=False)
+        qs2 = qs1.order_by('-year','-quarter').values('부채비율','year','quarter')
+        value = qs2[:1]
+        result = value[0]['부채비율'] if value else None
         return result
     
     def get_broker(self, n=10):
@@ -340,7 +363,7 @@ class Stock:
                 result_df.loc[i+1,'group'] = group_num
                 result_df['group'] = result_df['group'].fillna(1).astype(int)
             except Exception as e:
-                print(e, 'group 만들기 오류')
+                print(e, 'group 만들기 오류' , self.ticker.code, self.ticker.name)
                 result_df = pd.DataFrame(ls)
                 return result_df
         else:
@@ -655,20 +678,23 @@ class Stock:
         '''
         # self.investor_part 로 분석. 
         result = 0
-        if hasattr(self, 'investor_part'):
-            lastest_groups = sorted(self.investor_part['group'].unique())[-2:]
-            for group in lastest_groups:
-                data = self.investor_part.loc[self.investor_part['group']==group]
-          
-                cond = (data['매집비'] >= 105) & (data['주도기관'].str.contains("외국인|연기금|투신")) & (data['순매수금_억'] >= 10)
-                result += len(data.loc[cond])
-                
-                # cond = (data['풀매수기관']!="") & (data['매집비'] >= 103)  & (data['순매수금_억'] >= 10)
-                # result += len(data.loc[cond]) 
-                # 두개로 하면 겹치는 상황에 두가지 값이 모두 더해진다. 
+        try:
+            if hasattr(self, 'investor_part'):
+                lastest_groups = sorted(self.investor_part['group'].unique())[-2:]
+                for group in lastest_groups:
+                    data = self.investor_part.loc[self.investor_part['group']==group]
+            
+                    cond = (data['매집비'] >= 105) & (data['주도기관'].str.contains("외국인|연기금|투신")) & (data['순매수금_억'] >= 10)
+                    result += len(data.loc[cond])
+                    
+                    # cond = (data['풀매수기관']!="") & (data['매집비'] >= 103)  & (data['순매수금_억'] >= 10)
+                    # result += len(data.loc[cond]) 
+                    # 두개로 하면 겹치는 상황에 두가지 값이 모두 더해진다. 
+        except Exception as e:
+            print(f"{self.ticker.name} 매집비작업 실패! {e}")
         
         return result
-    
+       
         
     
     def is_3w(self):

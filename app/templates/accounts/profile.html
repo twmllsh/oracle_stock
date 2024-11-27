@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}프로필{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header text-center">
+        <h2>프로필</h2>
+    </div>
+    <div class="card-body text-center">
+        <h3>환영합니다, {{ user.username }}님!</h3>
+        <p>이메일: {{ user.email }}</p>
+        <p>가입일: {{ user.date_joined|date:"Y-m-d" }}</p>
+    </div>
+    <div class="card-footer text-center">
+        <a href="{% url 'logout' %}" class="btn btn-danger">로그아웃</a>
+    </div>
+</div>
+{% endblock %}

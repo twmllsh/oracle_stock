@@ -49,8 +49,11 @@ def update_ticker_usa():
             print(to_create)
 
     print(f"updated : {len(to_update)} created : {len(to_create)}")
+    try:
+        asyncio.run(mydiscord.send_message(f"update_ticker_usa finished!!"))
+    except:
+            pass
 
-    asyncio.run(mydiscord.send_message(f"update_ticker_usa finished!!"))
     return sp500
 
 
@@ -283,7 +286,7 @@ def update_ohlcv():
     last_dates = {item['ticker__symbol']:item['last_date']for item in last_dates}
     # {'MMM': datetime.date(2022, 12, 21)}
     sp500 = update_ticker_usa()
-    exists_ohlcvs = {ohlcv.ticker.symbol: ohlcv for ohlcv in Ohlcv_usa.objects.all()}
+    # exists_ohlcvs = {ohlcv.ticker.symbol: ohlcv for ohlcv in Ohlcv_usa.objects.all()}
     exists_tickers = {ticker.symbol: ticker for ticker in Ticker_usa.objects.all()}
     
     to_create=[]
@@ -300,21 +303,25 @@ def update_ohlcv():
         else:
             last_date = exists_last_date     ## 데이터가 있는상태 update가 들어간다. 
             update = True
+            print(f'{i} {symbol}임시로 넘기기')
+            continue
         if symbol in exists_tickers:
             ticker = exists_tickers.get(symbol)
         else:
             continue
         print(i, symbol)
+        ohlcv = pd.DataFrame()
         for _ in range(3):
             try:
                 ohlcv = fdr.DataReader(symbol, start=last_date)
+                break
             except:
-                print(f'{symbol} 데이터 가져오기 실패 50초 후에 재시도....... ')
-                time.sleep(50)
+                print(f'{symbol} 데이터 가져오기 실패 20초 후에 재시도....... ')
+                time.sleep(20)
         if len(ohlcv) ==0:
             time.sleep(1)
             continue
- 
+            
         for date, row1 in ohlcv.iterrows():
             date = date.date()
             if date == last_date and update:
