@@ -1,7 +1,7 @@
 <!-- item_list.html -->
 {% load django_bootstrap5 %}
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-lg-6">
         <form method="get">
             {% csrf_token %}
             <div class="form-group">
@@ -52,18 +52,15 @@
         <h5> ({{chartvalues|length}})</h5>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-lg-6">
         <div class="row">
             <div class="list-group">
                 {% for chartvalue in chartvalues %}
                 <div class="card">
-                                    
-
-                        {% comment %} <a href="#" hx-get="{% url 'dashboard:chart' item_code=chartvalue.ticker.code %}" hx-target="chart-part" hx-swap="innerHTML">    {% endcomment %}
                         <a href="#" hx-get="{% url 'dashboard:chart' item_code=chartvalue.ticker.code %}" hx-target="#chart-part" hx-swap="innerHTML">   
                             <div class="card-body">
-                                <h5 class="card-title">{{chartvalue.ticker.name}}({{chartvalue.ticker.code}})</h5>
-                                <p class="card-text">성장율: {{chartvalue.growth_y1}}%</p>
+                                <h5 class="card-title" style="font-size: 0.875rem;" >{{chartvalue.ticker.name}}({{chartvalue.ticker.code}})</h5>
+                                <p class="card-text" style="font-size: 0.875rem;">성장율: {{chartvalue.growth_y1}}%</p>
                             </div>
                         </div>
                 </a>
@@ -78,25 +75,42 @@
 </div>
 
 
-{% comment %} 
- <!-- 페이지네이션 -->
- <div class="pagination">
-    <span class="step-links">
+<!-- 페이지네이션 -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; 처음</a>
-            <a href="?page={{ page_obj.previous_page_number }}">이전</a>
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true">&laquo; 처음</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">이전</a>
+            </li>
         {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+        <li class="page-item disabled">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+        </li>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">다음</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">마지막 &raquo;</a>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">다음</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    마지막 &raquo;
+                </a>
+            </li>
         {% endif %}
-    </span>
-</div> {% endcomment %}
+    </ul>
+</nav>
+
+
+
+
 <script>
     // 슬라이더와 현재 값을 업데이트하는 스크립트
     const slider = document.getElementById('{{ form.slider.id_for_label }}');

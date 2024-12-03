@@ -124,11 +124,9 @@ class LineCross:
         """
         if len(self.gc_date_ls) == 0 and len(self.dc_date_ls) == 0:
             last_cross_date = None
-            cross_status = (
-                "정배열"
-                if self.line1.data.iloc[-1] > self.line2.data.iloc[-1]
-                else "역배열"
-            )
+            cross_status = "정배열" if self.line1.data.iloc[-1] > self.line2.data.iloc[-1] else "역배열"
+                
+            
         elif len(self.gc_date_ls) and len(self.dc_date_ls) == 0:
             last_cross_date = self.gc_date_ls[-1]
             cross_status = "정배열"
@@ -136,9 +134,8 @@ class LineCross:
             last_cross_date = self.dc_date_ls[-1]
             cross_status = "역배열"
         else:
-            cross_status = (
-                "정배열" if self.dc_date_ls[-1] < self.gc_date_ls[-1] else "역배열"
-            )
+            cross_status = "정배열" if self.dc_date_ls[-1] < self.gc_date_ls[-1] else "역배열"
+            
             last_cross_date = max(self.dc_date_ls[-1], self.gc_date_ls[-1])
         return cross_status, last_cross_date
 

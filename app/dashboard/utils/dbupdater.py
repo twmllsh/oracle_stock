@@ -1637,40 +1637,60 @@ class DBUpdater:
         df = pd.merge(df_real, df_stats, left_on='종목명', right_on='name', how='inner')
         
         # 조건 . 5분이나 30분 upper 넘어선거. 
-        ['종목명', '등락률', '현재가' ,'거래량', '매수총잔량', '매도총잔량', 'id', 'ticker', 'date',
-       'cur_price', 
-       'growth_y1', 'growth_y2', 'growth_q', 'good_buy',
-       'chart_d_bb60_upper20', 'chart_d_bb60_upper10', 'chart_d_bb60_upper',
-       'chart_d_bb60_width', 'chart_d_bb240_upper20', 'chart_d_bb240_upper10',
-       'chart_d_bb240_upper', 'chart_d_bb240_width', 
-       'chart_d_sun_width',
-       'chart_d_new_phase', 'chart_d_ab', 'chart_d_ab_v', 'chart_d_good_array',
+    #     ['종목명', '등락률', '현재가' ,'거래량', '매수총잔량', '매도총잔량', 'id', 'ticker', 'date',
+    #    'cur_price', 
+    #    'growth_y1', 'growth_y2', 'growth_q', 'good_buy',
+    #    'chart_d_bb60_upper20', 'chart_d_bb60_upper10', 'chart_d_bb60_upper',
+    #    'chart_d_bb60_width', 'chart_d_bb240_upper20', 'chart_d_bb240_upper10',
+    #    'chart_d_bb240_upper', 'chart_d_bb240_width', 
+    #    'chart_d_sun_width',
+    #    'chart_d_new_phase', 'chart_d_ab', 'chart_d_ab_v', 'chart_d_good_array',
        
-       'pre_vol', 'vol20', 
-       'reasons', 'reasons_30', 
+    #    'pre_vol', 'vol20', 
+    #    'reasons', 'reasons_30', 
        
-       'chart_30_bb60_upper20', 'chart_30_bb60_upper10', 'chart_30_bb60_upper', 'chart_30_bb60_width',
-       'chart_30_bb240_upper20', 'chart_30_bb240_upper10',
-       'chart_30_bb240_upper', 'chart_30_bb240_width', 'chart_30_sun_width',
-       'chart_30_new_phase', 'chart_30_ab', 'chart_30_ab_v',
-       'chart_30_good_array',
+    #    'chart_30_bb60_upper20', 'chart_30_bb60_upper10', 'chart_30_bb60_upper', 'chart_30_bb60_width',
+    #    'chart_30_bb240_upper20', 'chart_30_bb240_upper10',
+    #    'chart_30_bb240_upper', 'chart_30_bb240_width', 'chart_30_sun_width',
+    #    'chart_30_new_phase', 'chart_30_ab', 'chart_30_ab_v',
+    #    'chart_30_good_array',
        
-       'chart_5_bb60_upper20', 'chart_5_bb60_upper10',
-       'chart_5_bb60_upper', 'chart_5_bb60_width', 'chart_5_bb240_upper20',
-       'chart_5_bb240_upper10', 'chart_5_bb240_upper', 'chart_5_bb240_width',
-       'chart_5_sun_width', 'chart_5_new_phase', 'chart_5_ab', 'chart_5_ab_v',
-       'chart_5_good_array', 
+    #    'chart_5_bb60_upper20', 'chart_5_bb60_upper10',
+    #    'chart_5_bb60_upper', 'chart_5_bb60_width', 'chart_5_bb240_upper20',
+    #    'chart_5_bb240_upper10', 'chart_5_bb240_upper', 'chart_5_bb240_width',
+    #    'chart_5_sun_width', 'chart_5_new_phase', 'chart_5_ab', 'chart_5_ab_v',
+    #    'chart_5_good_array', 
        
-       '유보율', '부채비율', '액면가', 'EPS', '상장주식수', '유동주식수',
-       '매물대1', '매물대2', 'code', 'name']
+    #    '유보율', '부채비율', '액면가', 'EPS', '상장주식수', '유동주식수',
+    #    '매물대1', '매물대2', 'code', 'name']
         
         
-        ## 정배열이고. bb 상단 뚫은거. 시가와도 비교해야 정확하나 현재 시가정보가 없음. 아래처럼 데이터 다시 받아서 확인하는 방버도 있음. 
+#   {'is_coke_ac',
+#  'is_coke_gcv',
+#  'is_coke_gcv240',
+#  'is_coke_gcv60',
+#  'is_multi_through',
+#  'is_new_phase',
+#  'is_rsi',
+#  'is_sun_ac',
+#  'is_w20_3w',
+#  'is_w3_ac'}
+        
+        
+        ## 1정배열이고. bb 상단 뚫은거. 시가와도 비교해야 정확하나 현재 시가정보가 없음. 아래처럼 데이터 다시 받아서 확인하는 방버도 있음. 
         cond_row = df['chart_d_good_array']
         cond1 = (df['chart_d_bb240_upper'] < df['현재가']) & (df['chart_d_bb240_upper20'] > -0.1 )
         cond2 = (df['chart_30_bb240_upper'] < df['현재가']) & (df['chart_30_bb240_upper20'] > -0.1 )
         cond3 = (df['chart_5_bb240_upper'] < df['현재가']) & (df['chart_5_bb240_upper20'] > -0.1 )
         cond_up = cond_row & cond1 & (cond2 | cond3)
+        
+        ## 추가 조건 조합해야함. 
+        ## 2 newphase , 20w .. coke 이면서 30, 5 돌파상황. 
+        
+        
+        ## 3 rsi 면서 단봉에 평균거량 이하. 
+        
+        
         
         result_df = df.loc[cond_up]
         

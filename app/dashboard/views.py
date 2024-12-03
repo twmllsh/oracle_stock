@@ -147,7 +147,7 @@ class ItemListView(LoginRequiredMixin, FormMixin, ListView):
     context_object_name = 'chartvalues'
     form_class = StockFilterForm
     # success_url = "/kor/"
-    # paginate_by = 10
+    paginate_by = 5
     
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
@@ -257,13 +257,15 @@ class ItemListView(LoginRequiredMixin, FormMixin, ListView):
 
 def stock_detail_view(request, item_code):
     chartvalue = get_object_or_404(ChartValue, ticker_id=item_code)
-    stock = Stock(item_code)
+    stock = Stock(item_code, day_new=True)
     fig = stock.plot1()
     plot_div = opy.plot(fig, output_type='div', include_plotlyjs=False)
+    
     
     context = {
         'chartvalue': chartvalue,
         'plot_div': plot_div,
+        'stock':stock,
     }
     
     response = render(request, 'dashboard/_stock_detail.html', context)

@@ -89,7 +89,7 @@ class ElseInfo:
 # MyModel = apps.get_model('myapp', 'MyModel')
 class Stock:
 
-    def __init__(self, code, start_date=None, end_date=None, anal=False):
+    def __init__(self, code, start_date=None, end_date=None, anal=False, day_new=False):
         # from dashboard.models import Ohlcv, Finstats
         # from dashboard.models import Ticker, Info
         Ticker = apps.get_model("dashboard","Ticker")
@@ -109,11 +109,16 @@ class Stock:
         self.유보율 = self.get_유보율()
         self.부채비율 = self.get_부채비율()
         
-        # ohlcv_day1 = Ohlcv.get_data(self.ticker)
-        ohlcv_values = self.ticker.ohlcv_set.all().order_by('Date')[:400].values("Date","Open","High","Low","Close","Volume")
-        ohlcv_df = pd.DataFrame(ohlcv_values)
-        ohlcv_df['Date'] = pd.to_datetime(ohlcv_df['Date'])
-        ohlcv_day = ohlcv_df.set_index('Date')
+        if day_new:
+            the_date = pd.Timestamp.now() - pd.Timedelta(days=600)
+            ohlcv_day = fdr.DataReader(self.code, start=the_date)
+            
+        else:
+            # ohlcv_day1 = Ohlcv.get_data(self.ticker)
+            ohlcv_values = self.ticker.ohlcv_set.all().order_by('Date')[:400].values("Date","Open","High","Low","Close","Volume")
+            ohlcv_df = pd.DataFrame(ohlcv_values)
+            ohlcv_df['Date'] = pd.to_datetime(ohlcv_df['Date'])
+            ohlcv_day = ohlcv_df.set_index('Date')
         
         
         self.chart_d: chart.Chart = chart.Chart(
@@ -168,9 +173,14 @@ class Stock:
 
         # fin status
         self.fin_df, self.fin_df_q = self.get_fin_status()
-    
+        self.get_현금가()
+        
 
-    
+    def get_현금가(self):
+        if self.유보율  and self.액면가:
+            self.현금가 = int(self.유보율 * self.액면가)
+        else:
+            self.현금가 = None
     
     def get_유보율(self):
         qs = self.ticker.finstats_set.filter(fintype__in=['연결연도', '연결분기'])
