@@ -228,9 +228,10 @@ class ItemListView(LoginRequiredMixin, FormMixin, ListView):
             if realtime:
                 ## 실제 실행해서 db에 있는 애들 검색해서 가져와서 '
                 from dashboard.utils.dbupdater import DBUpdater
-                result = DBUpdater.choice_stock(2,12)
-                qs = Recommend.objects.filter(valid=True).values_list('code',flat=True)
-                queryset = ChartValue.objects.filter(ticker_id__in=qs)
+                result = DBUpdater.choice_stock(2,12) ## 임시로 실행하고나서. 
+                qs = Recommend.objects.filter(valid=True).values_list('code',flat=True)  ## db에 있는 데이터 가져오고. 
+                queryset = queryset.filter(ticker_id__in=qs) # 현재 쿼리에 추가한다. 
+                
                 
         return queryset
 
